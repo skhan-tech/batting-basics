@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚾ Batting Basics Academy ⚾</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+  :root {
+    --neon-green: #39ff14;
+    --neon-blue: #00f0ff;
+    --neon-pink: #ff6ec7;
+    --neon-yellow: #fff700;
+    --neon-orange: #ff9f1c;
+    --neon-red: #ff3131;
+    --dark-bg: #0a0a2e;
+    --darker-bg: #050519;
+    --card-bg: rgba(15,15,60,0.9);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'Press Start 2P', monospace;
+    background: var(--dark-bg);
+    color: #fff;
+    overflow-x: hidden;
+    min-height: 100vh;
+    user-select: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top:0;left:0;right:0;bottom:0;
+    background: repeating-linear-gradient(0deg,rgba(0,0,0,0.15) 0px,rgba(0,0,0,0.15) 1px,transparent 1px,transparent 3px);
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  .stars { position:fixed; top:0;left:0;right:0;bottom:0; z-index:0; overflow:hidden; }
+  .star { position:absolute; width:2px; height:2px; background:#fff; border-radius:50%; animation:twinkle 2s infinite alternate; }
+  @keyframes twinkle { 0%{opacity:.3} 100%{opacity:1} }
+
+  .game-container { position:relative; z-index:1; max-width:900px; margin:0 auto; padding:20px; }
+
+  /* Progress bar */
+  .progress-bar-container { position:fixed; top:0;left:0;right:0; height:40px; background:var(--darker-bg); border-bottom:3px solid var(--neon-orange); z-index:100; display:none; align-items:center; padding:0 20px; }
+  .progress-bar-container.active { display:flex; }
+  .progress-label { font-size:8px; color:var(--neon-orange); margin-right:10px; white-space:nowrap; }
+  .progress-track { flex:1; height:16px; background:#111; border:2px solid var(--neon-orange); border-radius:2px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--neon-orange),var(--neon-yellow)); width:0%; transition:width 0.8s ease; }
+  .progress-pct { font-size:8px; color:var(--neon-yellow); margin-left:10px; min-width:40px; }
+
+  .screen { display:none; animation:fadeIn 0.5s ease; padding-top:50px; }
+  .screen.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  /* Title */
+  .title-screen { text-align:center; padding-top:80px!important; }
+  .title-main { font-size:28px; color:var(--neon-orange); text-shadow:0 0 20px var(--neon-orange),0 0 40px var(--neon-red); margin-bottom:10px; animation:glow-o 2s infinite alternate; }
+  @keyframes glow-o { from{text-shadow:0 0 20px var(--neon-orange),0 0 40px var(--neon-red)} to{text-shadow:0 0 30px var(--neon-orange),0 0 60px var(--neon-red),0 0 80px var(--neon-pink)} }
+  .title-sub { font-size:12px; color:var(--neon-blue); margin-bottom:40px; }
+  .big-emoji { font-size:80px; margin:30px 0; animation:bounce 1s infinite; }
+  @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+  .start-btn { font-family:'Press Start 2P',monospace; font-size:16px; padding:15px 40px; background:transparent; color:var(--neon-orange); border:3px solid var(--neon-orange); cursor:pointer; animation:blink 1s infinite; transition:all .3s; }
+  .start-btn:hover { background:var(--neon-orange); color:var(--dark-bg); animation:none; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .level-header { text-align:center; margin-bottom:30px; padding:20px; border:3px solid var(--neon-orange); background:rgba(255,159,28,0.08); }
+  .level-num { font-size:10px; color:var(--neon-orange); letter-spacing:4px; }
+  .level-title { font-size:18px; color:var(--neon-yellow); margin-top:8px; text-shadow:0 0 10px var(--neon-yellow); }
+
+  .info-card { background:var(--card-bg); border:2px solid var(--neon-blue); padding:20px; margin:20px 0; border-radius:4px; line-height:2; font-size:10px; }
+  .info-card h3 { color:var(--neon-green); font-size:12px; margin-bottom:12px; text-shadow:0 0 8px var(--neon-green); }
+  .info-card p, .info-card li { color:#ccc; font-size:9px; line-height:2.2; }
+  .info-card ul { list-style:none; padding-left:10px; }
+  .info-card li::before { content:'▸ '; color:var(--neon-pink); }
+  .hl { color:var(--neon-yellow); text-shadow:0 0 5px var(--neon-yellow); }
+  .hl-g { color:var(--neon-green); text-shadow:0 0 5px var(--neon-green); }
+  .hl-p { color:var(--neon-pink); text-shadow:0 0 5px var(--neon-pink); }
+  .hl-b { color:var(--neon-blue); text-shadow:0 0 5px var(--neon-blue); }
+  .hl-o { color:var(--neon-orange); text-shadow:0 0 5px var(--neon-orange); }
+
+  .power-tip { display:flex; align-items:flex-start; gap:12px; background:rgba(255,255,0,.05); border:2px dashed var(--neon-yellow); padding:12px; margin:15px 0; border-radius:4px; }
+  .power-tip-icon { font-size:24px; flex-shrink:0; }
+  .power-tip-text { font-size:8px; color:var(--neon-yellow); line-height:2; }
+
+  .nav-btns { display:flex; justify-content:center; gap:20px; margin:40px 0 30px; flex-wrap:wrap; }
+  .nav-btn { font-family:'Press Start 2P',monospace; font-size:10px; padding:12px 30px; background:transparent; border:2px solid var(--neon-green); color:var(--neon-green); cursor:pointer; transition:all .3s; }
+  .nav-btn:hover { background:var(--neon-green); color:var(--dark-bg); }
+  .nav-btn.back { border-color:var(--neon-pink); color:var(--neon-pink); }
+  .nav-btn.back:hover { background:var(--neon-pink); color:var(--dark-bg); }
+
+  /* ===== INTERACTIVE AREA SHARED ===== */
+  .interactive-area { position:relative; width:100%; max-width:560px; margin:20px auto; background:rgba(0,0,0,.35); border:2px solid #333; border-radius:6px; overflow:hidden; touch-action:none; }
+  .feedback-banner { position:absolute; top:0; left:0; right:0; text-align:center; padding:8px; font-size:9px; z-index:10; transition:all .3s; opacity:0; pointer-events:none; }
+  .feedback-banner.show { opacity:1; }
+  .feedback-banner.good { background:rgba(57,255,20,.15); color:var(--neon-green); border-bottom:2px solid var(--neon-green); }
+  .feedback-banner.bad { background:rgba(255,49,49,.12); color:var(--neon-red); border-bottom:2px solid var(--neon-red); }
+  .feedback-banner.warn { background:rgba(255,255,0,.1); color:var(--neon-yellow); border-bottom:2px solid var(--neon-yellow); }
+  .drag-hint { text-align:center; font-size:7px; color:#444; margin-top:6px; }
+
+  /* ===== STRIKE ZONE INTERACTIVE ===== */
+  .sz-pitch { cursor:pointer; transition:all .15s; }
+  .sz-pitch:hover { filter:brightness(1.4); }
+  .sz-result { display:none; position:absolute; bottom:10px; left:50%; transform:translateX(-50%); font-size:11px; padding:6px 16px; border-radius:4px; z-index:10; pointer-events:none; }
+  .sz-result.show { display:block; animation:fadeIn .3s ease; }
+
+  /* Flip cards */
+  .term-cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:15px; margin:20px 0; }
+  .term-card { perspective:600px; height:190px; cursor:pointer; }
+  .term-card-inner { position:relative; width:100%; height:100%; transition:transform .6s; transform-style:preserve-3d; }
+  .term-card.flipped .term-card-inner { transform:rotateY(180deg); }
+  .term-front,.term-back { position:absolute; width:100%; height:100%; backface-visibility:hidden; border:2px solid var(--neon-pink); border-radius:4px; padding:15px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .term-front { background:var(--card-bg); }
+  .term-front-icon { font-size:36px; margin-bottom:10px; }
+  .term-front-text { font-size:9px; color:var(--neon-pink); line-height:1.8; }
+  .term-back { background:rgba(30,15,50,.95); transform:rotateY(180deg); border-color:var(--neon-green); }
+  .term-back-text { font-size:7px; color:#ccc; line-height:2; }
+  .tap-hint { font-size:7px; color:#444; margin-top:8px; }
+
+  /* Quiz */
+  .quiz-question { background:var(--card-bg); border:2px solid var(--neon-blue); padding:20px; margin:20px 0; border-radius:4px; }
+  .quiz-num { font-size:8px; color:var(--neon-pink); margin-bottom:8px; }
+  .quiz-text { font-size:10px; color:var(--neon-yellow); margin-bottom:15px; line-height:2; }
+  .quiz-options { display:flex; flex-direction:column; gap:8px; }
+  .quiz-opt { font-family:'Press Start 2P',monospace; font-size:8px; padding:10px 15px; background:rgba(0,0,0,.3); border:2px solid #333; color:#ccc; cursor:pointer; text-align:left; transition:all .3s; line-height:1.8; }
+  .quiz-opt:hover:not(.locked) { border-color:var(--neon-blue); color:#fff; }
+  .quiz-opt.selected { border-color:var(--neon-blue); background:rgba(0,240,255,.15); color:var(--neon-blue); }
+  .quiz-opt.correct { border-color:var(--neon-green)!important; background:rgba(57,255,20,.2)!important; color:var(--neon-green)!important; }
+  .quiz-opt.wrong { border-color:var(--neon-red)!important; background:rgba(255,49,49,.15)!important; color:var(--neon-red)!important; }
+  .quiz-opt.locked { cursor:default; }
+  .quiz-explain { margin-top:12px; padding:10px; background:rgba(0,0,0,.3); border-left:3px solid var(--neon-green); font-size:8px; color:#aaa; line-height:2; display:none; }
+  .quiz-explain.show { display:block; }
+
+  .results-card { text-align:center; background:var(--card-bg); border:3px solid var(--neon-yellow); padding:30px; margin:30px 0; border-radius:4px; }
+  .results-grade { font-size:60px; margin:20px 0; animation:glow-o 1.5s infinite alternate; }
+  .results-grade.grade-a { color:var(--neon-green); text-shadow:0 0 30px var(--neon-green); }
+  .results-grade.grade-b { color:var(--neon-blue); text-shadow:0 0 30px var(--neon-blue); }
+  .results-grade.grade-c { color:var(--neon-yellow); text-shadow:0 0 30px var(--neon-yellow); }
+  .results-grade.grade-d { color:var(--neon-orange); text-shadow:0 0 30px var(--neon-orange); }
+  .results-grade.grade-f { color:var(--neon-red); text-shadow:0 0 30px var(--neon-red); }
+  .results-pct { font-size:14px; color:var(--neon-blue); margin-bottom:15px; }
+  .results-msg { font-size:9px; color:#ccc; line-height:2; }
+
+  .confetti-container { position:fixed; top:0;left:0;right:0;bottom:0; pointer-events:none; z-index:9998; overflow:hidden; }
+  .confetti-piece { position:absolute; width:8px; height:8px; top:-10px; animation:confettiFall 3s linear forwards; }
+  @keyframes confettiFall { 0%{transform:translateY(0) rotate(0deg);opacity:1} 100%{transform:translateY(100vh) rotate(720deg);opacity:0} }
+
+  .section-divider { text-align:center; margin:30px 0; font-size:8px; color:#333; letter-spacing:6px; }
+  .game-footer { text-align:center; padding:30px; font-size:7px; color:#333; }
+
+  @media(max-width:600px){
+    .title-main{font-size:18px}
+    .level-title{font-size:14px}
+    .term-cards{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="progress-bar-container" id="progressBar">
+  <span class="progress-label">BATTING LVL</span>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="progress-pct" id="progressPct">0%</span>
+</div>
+
+<div class="game-container">
+
+<!-- ==================== TITLE ==================== -->
+<div class="screen active" id="screen-title">
+  <div class="title-screen">
+    <div class="big-emoji">⚾</div>
+    <div class="title-main">BATTING BASICS</div>
+    <div class="title-main" style="font-size:16px; margin-bottom:20px;">ACADEMY</div>
+    <div class="title-sub">— STEP UP TO THE PLATE —</div>
+    <div style="margin:20px 0;">
+      <span class="big-emoji" style="font-size:40px;animation-delay:0s;">🧢</span>
+      <span class="big-emoji" style="font-size:40px;animation-delay:.3s;">⚾</span>
+      <span class="big-emoji" style="font-size:40px;animation-delay:.6s;">🏟️</span>
+    </div>
+    <p style="font-size:8px;color:#666;margin:20px 0;line-height:2;">Master the batter's box. Own the plate.<br>Learn to crush it like a pro.</p>
+    <button class="start-btn" onclick="startGame()">▶ PLAY BALL ◀</button>
+    <p style="font-size:7px;color:#333;margin-top:30px;">4 LEVELS + FINAL QUIZ</p>
+  </div>
+</div>
+
+<!-- ==================== LEVEL 1: THE BATTER'S BOX ==================== -->
+<div class="screen" id="screen-level1">
+  <div class="level-header">
+    <div class="level-num">— LEVEL 1 —</div>
+    <div class="level-title">📦 THE BATTER'S BOX 📦</div>
+  </div>
+
+  <div class="info-card">
+    <h3>📏 WHAT IS THE BATTER'S BOX?</h3>
+    <p>The batter's box is a <span class="hl">chalk rectangle</span> on each side of home plate. You MUST stand inside this box when you're batting. There's one box for <span class="hl-b">right-handed</span> batters and one for <span class="hl-p">left-handed</span> batters.</p>
+    <br>
+    <p>If any part of your foot is <span class="hl" style="color:var(--neon-red)">OUTSIDE the box</span> when you hit the ball, you could be called <span class="hl" style="color:var(--neon-red)">OUT!</span></p>
+  </div>
+
+  <div class="info-card" style="text-align:center;">
+    <h3>🕹️ DRAG THE BATTER INTO THE CORRECT POSITION!</h3>
+    <p style="margin-bottom:10px;">Move the batter to stand properly in the box. Watch the feedback!</p>
+
+    <div class="interactive-area" id="boxArea" style="height:420px;">
+      <div class="feedback-banner" id="boxFeedback"></div>
+      <svg id="boxSvg" viewBox="0 0 560 420" style="width:100%;height:100%;">
+        <!-- Dirt background -->
+        <rect x="0" y="0" width="560" height="420" fill="#3d2b1f" rx="6"/>
+        <!-- Some dirt texture lines -->
+        <line x1="0" y1="100" x2="560" y2="105" stroke="#4a3527" stroke-width="1" opacity="0.3"/>
+        <line x1="0" y1="200" x2="560" y2="198" stroke="#4a3527" stroke-width="1" opacity="0.3"/>
+        <line x1="0" y1="300" x2="560" y2="303" stroke="#4a3527" stroke-width="1" opacity="0.3"/>
+
+        <!-- Home plate -->
+        <polygon id="homePlate" points="280,290 260,270 260,240 300,240 300,270" fill="#fff" opacity="0.9"/>
+        <text x="280" y="310" text-anchor="middle" fill="#888" font-family="'Press Start 2P'" font-size="7">HOME PLATE</text>
+
+        <!-- Left batter's box (for right-handed batter) -->
+        <rect x="165" y="190" width="80" height="120" fill="none" stroke="var(--neon-green)" stroke-width="2" stroke-dasharray="6,3" opacity="0.8"/>
+        <text x="205" y="185" text-anchor="middle" fill="var(--neon-green)" font-family="'Press Start 2P'" font-size="6" opacity="0.7">BATTER'S BOX</text>
+
+        <!-- Right batter's box -->
+        <rect x="315" y="190" width="80" height="120" fill="none" stroke="var(--neon-blue)" stroke-width="2" stroke-dasharray="6,3" opacity="0.8"/>
+        <text x="355" y="185" text-anchor="middle" fill="var(--neon-blue)" font-family="'Press Start 2P'" font-size="6" opacity="0.7">BATTER'S BOX</text>
+
+        <!-- Catcher area hint -->
+        <text x="280" y="355" text-anchor="middle" fill="#555" font-family="'Press Start 2P'" font-size="6">⬇ CATCHER IS BEHIND HERE</text>
+        <!-- Pitcher hint -->
+        <text x="280" y="140" text-anchor="middle" fill="#555" font-family="'Press Start 2P'" font-size="6">⬆ PITCHER IS THAT WAY</text>
+
+        <!-- Draggable batter (group) -->
+        <g id="batterDrag" style="cursor:grab;" transform="translate(90,220)">
+          <!-- Body -->
+          <circle cx="0" cy="-25" r="12" fill="var(--neon-yellow)"/> <!-- head -->
+          <rect x="-8" y="-13" width="16" height="30" rx="3" fill="var(--neon-orange)"/> <!-- torso -->
+          <rect x="-10" y="17" width="8" height="22" rx="2" fill="#555"/> <!-- left leg -->
+          <rect x="2" y="17" width="8" height="22" rx="2" fill="#555"/> <!-- right leg -->
+          <!-- Bat -->
+          <line x1="8" y1="-10" x2="30" y2="-45" stroke="#cd853f" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="32" cy="-48" r="3" fill="#deb887"/>
+          <!-- Helmet -->
+          <path d="M-14,-30 Q-14,-42 0,-42 Q10,-42 12,-34" fill="var(--neon-blue)" opacity="0.8"/>
+          <!-- Label -->
+          <text x="0" y="58" text-anchor="middle" fill="var(--neon-yellow)" font-family="'Press Start 2P'" font-size="7">⬆ DRAG ME!</text>
+        </g>
+      </svg>
+    </div>
+    <div class="drag-hint">CLICK AND DRAG THE BATTER TO EITHER BOX</div>
+  </div>
+
+  <div class="info-card">
+    <h3>✅ BATTER'S BOX RULES</h3>
+    <ul>
+      <li><span class="hl-g">BOTH FEET</span> must be completely inside the box</li>
+      <li>You CAN touch the <span class="hl">lines</span> — they're part of the box!</li>
+      <li>You pick the box based on which side you bat from</li>
+      <li>Right-handed batter → <span class="hl-g">LEFT box</span> (faces pitcher)</li>
+      <li>Left-handed batter → <span class="hl-b">RIGHT box</span> (faces pitcher)</li>
+      <li>Don't step on home plate — that's the umpire's territory!</li>
+    </ul>
+  </div>
+
+  <div class="power-tip">
+    <div class="power-tip-icon">💡</div>
+    <div class="power-tip-text">COACH'S TIP: Stand toward the BACK of the box (closer to the catcher). This gives you a split-second longer to see the pitch! That tiny bit of extra time makes a HUGE difference.</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn" onclick="goTo('screen-level2')">NEXT LEVEL ▸▸</button>
+  </div>
+</div>
+
+<!-- ==================== LEVEL 2: BAT POSITION ==================== -->
+<div class="screen" id="screen-level2">
+  <div class="level-header">
+    <div class="level-num">— LEVEL 2 —</div>
+    <div class="level-title">⚾ BAT POSITION & THE PLATE ⚾</div>
+  </div>
+
+  <div class="info-card">
+    <h3>🎯 COVERING THE PLATE</h3>
+    <p>When you stand in the batter's box and extend your arms, the <span class="hl">barrel of your bat</span> (the fat end) should reach <span class="hl-g">across the entire plate</span>. If you're too far from the plate, you can't hit the outside pitches. Too close? You'll get jammed!</p>
+  </div>
+
+  <div class="info-card" style="text-align:center;">
+    <h3>🕹️ ADJUST THE BAT TO COVER THE PLATE!</h3>
+    <p style="margin-bottom:10px;">Drag the bat so the barrel reaches across the plate properly.</p>
+
+    <div class="interactive-area" id="batArea" style="height:380px;">
+      <div class="feedback-banner" id="batFeedback"></div>
+      <svg id="batSvg" viewBox="0 0 560 380" style="width:100%;height:100%;">
+        <!-- Background -->
+        <rect x="0" y="0" width="560" height="380" fill="#3d2b1f" rx="6"/>
+
+        <!-- Top-down view label -->
+        <text x="280" y="25" text-anchor="middle" fill="#555" font-family="'Press Start 2P'" font-size="7">⬆ TOP-DOWN VIEW — LOOKING DOWN AT THE PLATE</text>
+
+        <!-- Home plate (top-down) -->
+        <polygon id="plateTop" points="280,230 255,200 255,150 305,150 305,200" fill="#fff" opacity="0.85"/>
+        <text x="280" y="185" text-anchor="middle" fill="#333" font-family="'Press Start 2P'" font-size="7">PLATE</text>
+
+        <!-- Strike zone overlay on plate -->
+        <rect x="253" y="148" width="54" height="54" fill="none" stroke="var(--neon-red)" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+
+        <!-- Batter (top-down, standing to the left of plate) -->
+        <circle cx="190" cy="210" r="14" fill="var(--neon-orange)" opacity="0.8"/>
+        <text x="190" y="214" text-anchor="middle" fill="#000" font-family="'Press Start 2P'" font-size="6">YOU</text>
+
+        <!-- Reach zones -->
+        <text x="280" y="128" text-anchor="middle" fill="var(--neon-green)" font-family="'Press Start 2P'" font-size="6" opacity="0.5">INSIDE PITCH</text>
+        <text x="280" y="260" text-anchor="middle" fill="var(--neon-blue)" font-family="'Press Start 2P'" font-size="6" opacity="0.5">OUTSIDE PITCH</text>
+
+        <!-- Ideal zone indicator -->
+        <rect x="247" y="140" width="66" height="100" fill="none" stroke="var(--neon-green)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.3"/>
+
+        <!-- Draggable bat (horizontal top-down view) -->
+        <g id="batDrag" style="cursor:grab;" transform="translate(0,0)">
+          <!-- Bat handle -->
+          <rect x="170" y="195" width="40" height="8" rx="3" fill="#8B6914"/>
+          <!-- Bat taper -->
+          <rect x="210" y="193" width="50" height="12" rx="2" fill="#cd853f"/>
+          <!-- Bat barrel -->
+          <rect id="batBarrel" x="260" y="190" width="65" height="18" rx="6" fill="#deb887" stroke="var(--neon-yellow)" stroke-width="1.5"/>
+          <!-- Barrel label -->
+          <text x="292" y="202" text-anchor="middle" fill="#333" font-family="'Press Start 2P'" font-size="5">BARREL</text>
+          <!-- Sweet spot -->
+          <circle cx="295" cy="199" r="4" fill="var(--neon-red)" opacity="0.7"/>
+          <!-- Drag instruction -->
+          <text x="292" y="230" text-anchor="middle" fill="var(--neon-yellow)" font-family="'Press Start 2P'" font-size="6">◀ DRAG LEFT/RIGHT ▶</text>
+        </g>
+      </svg>
+    </div>
+    <div class="drag-hint">DRAG THE BAT LEFT AND RIGHT TO FIND THE SWEET SPOT</div>
+  </div>
+
+  <div class="info-card">
+    <h3>📐 THE PERFECT POSITION</h3>
+    <ul>
+      <li>The <span class="hl">barrel</span> (fat end) should reach the <span class="hl-b">outside edge</span> of the plate</li>
+      <li>Your arms should be <span class="hl-g">slightly bent</span>, not fully stretched out</li>
+      <li>Extend your arms out toward the plate — if the bat covers it, you're golden!</li>
+      <li>Too far? Move a step closer. Too close? Scoot back. Easy fix!</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3>🤲 THE GRIP</h3>
+    <ul>
+      <li>Hold the bat with your <span class="hl-g">knocking knuckles lined up</span> (the knuckles you'd use to knock on a door)</li>
+      <li>Grip it firm but <span class="hl">NOT too tight</span> — like you're holding a tube of toothpaste without squeezing any out</li>
+      <li>Bottom hand goes on the bottom, top hand on top (sounds obvious but lots of kids mix it up!)</li>
+      <li><span class="hl-p">Right-handed:</span> Left hand on bottom, right hand on top</li>
+      <li><span class="hl-b">Left-handed:</span> Right hand on bottom, left hand on top</li>
+    </ul>
+  </div>
+
+  <div class="power-tip">
+    <div class="power-tip-icon">⭐</div>
+    <div class="power-tip-text">COACH'S TIP: Before every at-bat, do the "plate check" — reach the bat out and make sure it covers the whole plate. If it does, you're in the right spot. If not, adjust your feet. This takes 2 seconds and makes you a better hitter instantly!</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn back" onclick="goTo('screen-level1')">◂◂ BACK</button>
+    <button class="nav-btn" onclick="goTo('screen-level3')">NEXT LEVEL ▸▸</button>
+  </div>
+</div>
+
+<!-- ==================== LEVEL 3: STRIKES, BALLS, FOULS ==================== -->
+<div class="screen" id="screen-level3">
+  <div class="level-header">
+    <div class="level-num">— LEVEL 3 —</div>
+    <div class="level-title">🎯 STRIKES, BALLS & MORE 🎯</div>
+  </div>
+
+  <div class="info-card">
+    <h3>📺 THE STRIKE ZONE</h3>
+    <p>The strike zone is an <span class="hl">invisible box</span> over home plate. It goes from the batter's <span class="hl-g">knees</span> to the middle of their <span class="hl-g">chest</span>, and is as wide as the plate. If the pitch goes through this zone and you don't swing — that's a <span class="hl" style="color:var(--neon-red)">STRIKE</span>!</p>
+  </div>
+
+  <!-- Interactive strike zone -->
+  <div class="info-card" style="text-align:center;">
+    <h3>🕹️ TAP WHERE THE PITCH IS — STRIKE OR BALL?</h3>
+    <p style="margin-bottom:10px;">Tap the baseballs to see if each pitch is a strike or a ball!</p>
+
+    <div class="interactive-area" id="szArea" style="height:420px; position:relative;">
+      <div id="szResult" class="sz-result"></div>
+      <svg id="szSvg" viewBox="0 0 560 420" style="width:100%;height:100%;">
+        <!-- Background - catcher's POV -->
+        <rect x="0" y="0" width="560" height="420" fill="#1a1a3e"/>
+        <!-- Dirt at bottom -->
+        <rect x="0" y="350" width="560" height="70" fill="#3d2b1f" rx="0"/>
+
+        <!-- Home plate -->
+        <polygon points="280,355 258,340 258,310 302,310 302,340" fill="#fff" opacity="0.7"/>
+
+        <!-- Strike zone box -->
+        <rect id="strikeZone" x="215" y="115" width="130" height="200" fill="rgba(255,0,0,0.06)" stroke="var(--neon-red)" stroke-width="2" stroke-dasharray="8,4"/>
+        <text x="280" y="108" text-anchor="middle" fill="var(--neon-red)" font-family="'Press Start 2P'" font-size="7" opacity="0.7">STRIKE ZONE</text>
+
+        <!-- Zone labels -->
+        <text x="280" y="135" text-anchor="middle" fill="#444" font-family="'Press Start 2P'" font-size="5">— CHEST —</text>
+        <text x="280" y="310" text-anchor="middle" fill="#444" font-family="'Press Start 2P'" font-size="5">— KNEES —</text>
+        <text x="210" y="215" text-anchor="end" fill="#444" font-family="'Press Start 2P'" font-size="5">INSIDE</text>
+        <text x="350" y="215" text-anchor="start" fill="#444" font-family="'Press Start 2P'" font-size="5">OUTSIDE</text>
+
+        <!-- Batter silhouette (right side) -->
+        <g transform="translate(390,180)" opacity="0.25">
+          <circle cx="0" cy="-20" r="15" fill="#fff"/>
+          <rect x="-10" y="-5" width="20" height="40" rx="4" fill="#fff"/>
+          <rect x="-12" y="35" width="10" height="30" rx="3" fill="#fff"/>
+          <rect x="2" y="35" width="10" height="30" rx="3" fill="#fff"/>
+        </g>
+
+        <!-- Pitch balls to tap (mix of strikes and balls) -->
+        <!-- STRIKE: center -->
+        <circle class="sz-pitch" cx="280" cy="200" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="strike" data-msg="⚡ STRIKE! Right down the middle!"/>
+        <path d="M270,195 Q280,185 290,195" fill="none" stroke="#c33" stroke-width="1.5" transform="translate(0,0)"/>
+
+        <!-- STRIKE: low inside corner -->
+        <circle class="sz-pitch" cx="225" cy="295" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="strike" data-msg="⚡ STRIKE! Caught the corner — just inside the zone!"/>
+        <path d="M215,290 Q225,280 235,290" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <!-- BALL: high -->
+        <circle class="sz-pitch" cx="260" cy="70" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="ball" data-msg="🔵 BALL! Way too high — above the chest!"/>
+        <path d="M250,65 Q260,55 270,65" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <!-- BALL: outside -->
+        <circle class="sz-pitch" cx="420" cy="210" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="ball" data-msg="🔵 BALL! Too far outside — off the plate!"/>
+        <path d="M410,205 Q420,195 430,205" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <!-- STRIKE: high inside -->
+        <circle class="sz-pitch" cx="230" cy="135" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="strike" data-msg="⚡ STRIKE! Up and in — but still in the zone!"/>
+        <path d="M220,130 Q230,120 240,130" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <!-- BALL: low -->
+        <circle class="sz-pitch" cx="300" cy="370" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="ball" data-msg="🔵 BALL! In the dirt — below the knees!"/>
+        <path d="M290,365 Q300,355 310,365" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <!-- BALL: inside -->
+        <circle class="sz-pitch" cx="130" cy="180" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="ball" data-msg="🔵 BALL! Way inside — almost hit the batter!"/>
+        <path d="M120,175 Q130,165 140,175" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <!-- STRIKE: outside corner -->
+        <circle class="sz-pitch" cx="335" cy="240" r="16" fill="#fff" stroke="#c33" stroke-width="2" data-result="strike" data-msg="⚡ STRIKE! Painting the outside corner — nasty pitch!"/>
+        <path d="M325,235 Q335,225 345,235" fill="none" stroke="#c33" stroke-width="1.5"/>
+
+        <text x="280" y="405" text-anchor="middle" fill="#555" font-family="'Press Start 2P'" font-size="7">👆 TAP EACH BASEBALL!</text>
+      </svg>
+    </div>
+  </div>
+
+  <div class="section-divider">● ● ● ● ● ● ● ●</div>
+
+  <div class="info-card">
+    <h3>📖 KEY BATTING TERMS — TAP TO FLIP!</h3>
+  </div>
+
+  <div class="term-cards">
+    <div class="term-card" onclick="this.classList.toggle('flipped')">
+      <div class="term-card-inner">
+        <div class="term-front">
+          <div class="term-front-icon">❌</div>
+          <div class="term-front-text">STRIKE</div>
+          <div class="tap-hint">[ TAP ME ]</div>
+        </div>
+        <div class="term-back">
+          <div class="term-back-text">A pitch in the strike zone that you DON'T swing at, OR any swing where you MISS the ball. Foul balls also count as strikes (but can't be strike 3). THREE strikes = you're OUT!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="term-card" onclick="this.classList.toggle('flipped')">
+      <div class="term-card-inner">
+        <div class="term-front">
+          <div class="term-front-icon">🔵</div>
+          <div class="term-front-text">BALL</div>
+          <div class="tap-hint">[ TAP ME ]</div>
+        </div>
+        <div class="term-back">
+          <div class="term-back-text">A pitch OUTSIDE the strike zone that you don't swing at. Good eye! FOUR balls = you get a FREE WALK to first base. This is called a "base on balls" or just a "walk."</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="term-card" onclick="this.classList.toggle('flipped')">
+      <div class="term-card-inner">
+        <div class="term-front">
+          <div class="term-front-icon">↗️</div>
+          <div class="term-front-text">FOUL BALL</div>
+          <div class="tap-hint">[ TAP ME ]</div>
+        </div>
+        <div class="term-back">
+          <div class="term-back-text">A hit ball that lands OUTSIDE the foul lines (in foul territory). It counts as a strike, BUT it can't be your 3rd strike (unless you bunt it foul). If it's caught in the air — even in foul territory — you're OUT!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="term-card" onclick="this.classList.toggle('flipped')">
+      <div class="term-card-inner">
+        <div class="term-front">
+          <div class="term-front-icon">🤏</div>
+          <div class="term-front-text">BUNT</div>
+          <div class="tap-hint">[ TAP ME ]</div>
+        </div>
+        <div class="term-back">
+          <div class="term-back-text">Instead of swinging, you hold the bat out and let the ball HIT it softly. The ball dribbles a short distance. Used to move runners forward. CAREFUL: if you bunt foul with 2 strikes, it's strike 3 — you're OUT!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="term-card" onclick="this.classList.toggle('flipped')">
+      <div class="term-card-inner">
+        <div class="term-front">
+          <div class="term-front-icon">🚶</div>
+          <div class="term-front-text">WALK (BB)</div>
+          <div class="tap-hint">[ TAP ME ]</div>
+        </div>
+        <div class="term-back">
+          <div class="term-back-text">When the pitcher throws 4 BALLS (pitches outside the strike zone that you don't swing at), you walk to first base for FREE. A walk is just as good as a hit — you're on base!</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="term-card" onclick="this.classList.toggle('flipped')">
+      <div class="term-card-inner">
+        <div class="term-front">
+          <div class="term-front-icon">😤</div>
+          <div class="term-front-text">STRIKEOUT (K)</div>
+          <div class="tap-hint">[ TAP ME ]</div>
+        </div>
+        <div class="term-back">
+          <div class="term-back-text">When you get 3 STRIKES and you're OUT. In a scorebook, a strikeout is written as "K." A BACKWARDS K means you struck out looking (didn't swing at strike 3). Don't worry — even the best hitters strike out!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="power-tip">
+    <div class="power-tip-icon">🧠</div>
+    <div class="power-tip-text">COACH'S SECRET: "A walk is as good as a hit!" Having a good EYE means you know which pitches to swing at and which to let go. Don't chase bad pitches — make the pitcher throw strikes. Patience is a SUPERPOWER at the plate!</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn back" onclick="goTo('screen-level2')">◂◂ BACK</button>
+    <button class="nav-btn" onclick="goTo('screen-level4')">NEXT LEVEL ▸▸</button>
+  </div>
+</div>
+
+<!-- ==================== LEVEL 4: COACH'S PRO TIPS ==================== -->
+<div class="screen" id="screen-level4">
+  <div class="level-header">
+    <div class="level-num">— LEVEL 4 —</div>
+    <div class="level-title">🏆 COACH'S PRO TIPS 🏆</div>
+  </div>
+
+  <div class="info-card">
+    <h3>🦶 YOUR STANCE — THE FOUNDATION</h3>
+    <ul>
+      <li>Feet <span class="hl-g">shoulder-width apart</span> — balanced and comfortable</li>
+      <li>Knees <span class="hl">slightly bent</span> — like you're about to jump</li>
+      <li>Weight on the <span class="hl-p">balls of your feet</span>, NOT your heels</li>
+      <li>Feet parallel to the plate — toes pointing roughly at the plate</li>
+      <li>Stay <span class="hl-b">relaxed</span> — tense muscles are SLOW muscles!</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3>👀 EYES ON THE BALL</h3>
+    <p>This is the <span class="hl">#1 RULE</span> of hitting:</p>
+    <ul>
+      <li><span class="hl-g">Watch the ball</span> from the pitcher's HAND all the way to the bat</li>
+      <li>Keep your head STILL — don't pull it out when you swing</li>
+      <li>Try to see the ball hit your bat — literally watch it make contact</li>
+      <li>If you can't see the ball, you can't hit the ball. Simple!</li>
+    </ul>
+  </div>
+
+  <div class="info-card">
+    <h3>🔄 THE SWING — STEP BY STEP</h3>
+    <ul>
+      <li><span class="hl">1. LOAD</span> — Shift your weight slightly to your back foot</li>
+      <li><span class="hl-g">2. STRIDE</span> — Take a small step toward the pitcher (just a few inches!)</li>
+      <li><span class="hl-b">3. HIPS</span> — Rotate your hips FIRST — this is where your power comes from!</li>
+      <li><span class="hl-p">4. HANDS</span> — Your hands follow your hips, bringing the bat through the zone</li>
+      <li><span class="hl-o">5. FOLLOW THROUGH</span> — Let the bat finish over your other shoulder</li>
+    </ul>
+    <br>
+    <p style="color:var(--neon-yellow); font-size:10px;">Remember: Power comes from your LEGS and HIPS, not just your arms! 💪</p>
+  </div>
+
+  <div class="info-card">
+    <h3>🚫 COMMON MISTAKES</h3>
+    <ul>
+      <li>❌ Swinging at EVERYTHING — be patient, wait for YOUR pitch</li>
+      <li>❌ Stepping away from the plate (stepping "in the bucket") — step TOWARD the pitcher!</li>
+      <li>❌ Gripping the bat too tight — relax those hands!</li>
+      <li>❌ Lifting your head up when you swing — keep it down, eyes on the ball</li>
+      <li>❌ Swinging with just your arms — use those hips!</li>
+    </ul>
+  </div>
+
+  <div class="power-tip">
+    <div class="power-tip-icon">🏆</div>
+    <div class="power-tip-text">COACH'S FINAL TIP: The best hitters aren't the strongest — they're the SMARTEST. They know the strike zone, they're patient, they watch the ball, and they trust their swing. Be confident up there. You belong in that batter's box. Now go get 'em! ⚾💥</div>
+  </div>
+
+  <div class="nav-btns">
+    <button class="nav-btn back" onclick="goTo('screen-level3')">◂◂ BACK</button>
+    <button class="nav-btn" onclick="goTo('screen-quiz'); startQuiz();" style="border-color:var(--neon-yellow);color:var(--neon-yellow);">🏆 TAKE THE QUIZ! 🏆</button>
+  </div>
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div class="screen" id="screen-quiz">
+  <div class="level-header">
+    <div class="level-num">— FINAL CHALLENGE —</div>
+    <div class="level-title">🏆 BATTING QUIZ 🏆</div>
+  </div>
+
+  <div class="info-card">
+    <h3>📝 5 QUESTIONS — SHOW WHAT YOU KNOW!</h3>
+    <p>Answer all 5 questions, then see your grade! Swing for the fences! ⚾</p>
+    <div style="margin-top:15px;">
+      <label style="font-size:9px;color:var(--neon-green);display:block;margin-bottom:8px;">ENTER YOUR NAME, PLAYER:</label>
+      <input type="text" id="playerName" placeholder="YOUR NAME HERE" maxlength="30" style="font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 15px;background:rgba(0,0,0,.5);border:2px solid var(--neon-green);color:var(--neon-green);width:100%;max-width:350px;outline:none;"/>
+    </div>
+  </div>
+
+  <div id="quizContainer"></div>
+
+  <div class="nav-btns" id="quizSubmitArea" style="display:none;">
+    <button class="nav-btn" onclick="gradeQuiz()" style="border-color:var(--neon-yellow);color:var(--neon-yellow);font-size:12px;padding:15px 40px;">⚡ GRADE MY QUIZ ⚡</button>
+  </div>
+
+  <div id="quizResults" style="display:none;"></div>
+
+  <div class="nav-btns" id="quizRetryArea" style="display:none;">
+    <button class="nav-btn back" onclick="goTo('screen-level1')">◂◂ REVIEW LEVELS</button>
+    <button class="nav-btn" onclick="downloadScoreCard()" style="border-color:var(--neon-yellow);color:var(--neon-yellow);">📥 DOWNLOAD SCORE</button>
+    <button class="nav-btn" onclick="goTo('screen-quiz'); startQuiz();">🔄 TRY AGAIN</button>
+  </div>
+</div>
+
+</div><!-- end game-container -->
+
+<div class="game-footer">⚾ BATTING BASICS ACADEMY ⚾<br>COACH'S TRAINING PROGRAM — 2026 SEASON</div>
+
+<script>
+// ============ STARS ============
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<120;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    s.style.left=Math.random()*100+'%';
+    s.style.top=Math.random()*100+'%';
+    s.style.animationDelay=Math.random()*3+'s';
+    s.style.width=s.style.height=(1+Math.random()*2)+'px';
+    c.appendChild(s);
+  }
+})();
+
+// ============ NAVIGATION ============
+const progressMap = {
+  'screen-title':0,'screen-level1':20,'screen-level2':40,
+  'screen-level3':60,'screen-level4':80,'screen-quiz':100
+};
+function goTo(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+  const pct=progressMap[id]||0;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressPct').textContent=pct+'%';
+}
+function startGame(){
+  document.getElementById('progressBar').classList.add('active');
+  goTo('screen-level1');
+}
+
+// ============ BATTER'S BOX DRAG ============
+(function(){
+  const svg=document.getElementById('boxSvg');
+  const batter=document.getElementById('batterDrag');
+  const fb=document.getElementById('boxFeedback');
+  let dragging=false, startX=0, startY=0, origX=90, origY=220, curX=90, curY=220;
+
+  function getPoint(e){
+    const pt=svg.createSVGPoint();
+    const touch=e.touches?e.touches[0]:e;
+    pt.x=touch.clientX; pt.y=touch.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  function updateFeedback(){
+    // Batter center approx at curX, curY
+    // Left box: x165-245, y190-310
+    // Right box: x315-395, y190-310
+    const bx=curX, by=curY;
+    const inLeft = bx>=165 && bx<=245 && by>=190 && by<=310;
+    const inRight = bx>=315 && bx<=395 && by>=190 && by<=310;
+    // On plate
+    const onPlate = bx>=250 && bx<=310 && by>=235 && by<=300;
+
+    fb.classList.add('show');
+    if(onPlate){
+      fb.className='feedback-banner show bad';
+      fb.textContent="❌ You're standing on HOME PLATE! Step into the box!";
+    } else if(inLeft){
+      fb.className='feedback-banner show good';
+      fb.textContent="✅ PERFECT! You're in the LEFT batter's box! (Right-handed hitter)";
+    } else if(inRight){
+      fb.className='feedback-banner show good';
+      fb.textContent="✅ PERFECT! You're in the RIGHT batter's box! (Left-handed hitter)";
+    } else {
+      fb.className='feedback-banner show bad';
+      fb.textContent="❌ You're OUTSIDE the box! Move into one of the batter's boxes!";
+    }
+  }
+
+  function onStart(e){
+    e.preventDefault();
+    dragging=true;
+    const p=getPoint(e);
+    startX=p.x; startY=p.y;
+    batter.style.cursor='grabbing';
+  }
+  function onMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const p=getPoint(e);
+    curX=origX+(p.x-startX);
+    curY=origY+(p.y-startY);
+    // Clamp
+    curX=Math.max(40,Math.min(520,curX));
+    curY=Math.max(60,Math.min(380,curY));
+    batter.setAttribute('transform',`translate(${curX},${curY})`);
+    updateFeedback();
+  }
+  function onEnd(){
+    if(!dragging) return;
+    dragging=false;
+    origX=curX; origY=curY;
+    batter.style.cursor='grab';
+  }
+
+  batter.addEventListener('mousedown',onStart);
+  batter.addEventListener('touchstart',onStart,{passive:false});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);
+  document.addEventListener('touchend',onEnd);
+})();
+
+// ============ BAT POSITION DRAG ============
+(function(){
+  const svg=document.getElementById('batSvg');
+  const bat=document.getElementById('batDrag');
+  const fb=document.getElementById('batFeedback');
+  let dragging=false, startX=0, offX=0, curX=0;
+
+  function getPoint(e){
+    const pt=svg.createSVGPoint();
+    const touch=e.touches?e.touches[0]:e;
+    pt.x=touch.clientX; pt.y=touch.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  function updateFeedback(){
+    // Barrel center at 292 + curX
+    const barrelCenter = 292 + curX;
+    // Plate spans x 255–305
+    // Ideal: barrel covers the outside edge of plate ~300-310 range
+    // Barrel goes from (260+curX) to (325+curX)
+    const barrelLeft = 260 + curX;
+    const barrelRight = 325 + curX;
+
+    fb.classList.add('show');
+    if(barrelRight < 255){
+      fb.className='feedback-banner show bad';
+      fb.textContent="❌ WAY too far inside! Your bat can't reach the outside pitches!";
+    } else if(barrelLeft > 310){
+      fb.className='feedback-banner show bad';
+      fb.textContent="❌ Too far over the plate! You'll get jammed on inside pitches!";
+    } else if(barrelRight >= 300 && barrelRight <= 340 && barrelLeft <= 270){
+      fb.className='feedback-banner show good';
+      fb.textContent="✅ PERFECT! Your barrel covers the whole plate! Great plate coverage!";
+    } else if(barrelRight < 300){
+      fb.className='feedback-banner show warn';
+      fb.textContent="⚠️ Almost! Reach out a bit more to cover the outside corner.";
+    } else if(barrelLeft > 270){
+      fb.className='feedback-banner show warn';
+      fb.textContent="⚠️ Close! You're reaching too far — you won't handle inside pitches.";
+    } else {
+      fb.className='feedback-banner show good';
+      fb.textContent="✅ Nice! You're covering most of the plate!";
+    }
+  }
+
+  function onStart(e){
+    e.preventDefault();
+    dragging=true;
+    const p=getPoint(e);
+    startX=p.x;
+    bat.style.cursor='grabbing';
+  }
+  function onMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const p=getPoint(e);
+    curX=offX+(p.x-startX);
+    curX=Math.max(-130,Math.min(100,curX));
+    bat.setAttribute('transform',`translate(${curX},0)`);
+    updateFeedback();
+  }
+  function onEnd(){
+    if(!dragging) return;
+    dragging=false;
+    offX=curX;
+    bat.style.cursor='grab';
+  }
+
+  bat.addEventListener('mousedown',onStart);
+  bat.addEventListener('touchstart',onStart,{passive:false});
+  document.addEventListener('mousemove',onMove);
+  document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);
+  document.addEventListener('touchend',onEnd);
+})();
+
+// ============ STRIKE ZONE TAP ============
+document.querySelectorAll('.sz-pitch').forEach(ball=>{
+  ball.addEventListener('click',function(){
+    const res=this.dataset.result;
+    const msg=this.dataset.msg;
+    const el=document.getElementById('szResult');
+    el.textContent=msg;
+    el.className='sz-result show';
+    el.style.background = res==='strike' ? 'rgba(255,49,49,0.9)' : 'rgba(0,100,255,0.9)';
+    el.style.color='#fff';
+    el.style.fontFamily="'Press Start 2P',monospace";
+    el.style.fontSize='8px';
+    el.style.lineHeight='1.8';
+    el.style.padding='10px 16px';
+    el.style.borderRadius='4px';
+    el.style.maxWidth='90%';
+    el.style.textAlign='center';
+
+    // Highlight the ball
+    this.setAttribute('fill', res==='strike' ? 'var(--neon-red)' : 'var(--neon-blue)');
+    this.style.opacity='0.8';
+    this.style.pointerEvents='none';
+
+    setTimeout(()=>{el.classList.remove('show');},3000);
+  });
+});
+
+// ============ QUIZ ============
+const questionBank = [
+  // Batter's box
+  {q:"Where must you stand when batting?", opts:["Inside the batter's box","On home plate","Wherever you want","Behind the catcher"], correct:0, explain:"You MUST stand inside the batter's box lines when batting!"},
+  {q:"What happens if your foot is OUTSIDE the box when you hit the ball?", opts:["You could be called OUT","Nothing happens","You get a free base","The pitch doesn't count"], correct:0, explain:"Stepping out of the box when you make contact can get you called out!"},
+  {q:"Which batter's box does a RIGHT-HANDED hitter stand in?", opts:["The LEFT box (facing the pitcher)","The RIGHT box","Either one","Behind the plate"], correct:0, explain:"Right-handed batters stand in the left box so they face the pitcher!"},
+  {q:"Where in the box should you stand for extra reaction time?", opts:["Toward the BACK (closer to the catcher)","At the very front","Right in the middle","It doesn't matter"], correct:0, explain:"Standing toward the back gives you a split-second longer to see the pitch!"},
+
+  // Bat position & grip
+  {q:"The BARREL of your bat should reach across the entire ___.", opts:["Home plate","Pitcher's mound","Batter's box","Dugout"], correct:0, explain:"Your barrel should cover the whole plate so you can hit inside AND outside pitches!"},
+  {q:"How tight should you grip the bat?", opts:["Firm but not too tight","As tight as possible","Very loose","Only with your fingertips"], correct:0, explain:"Grip it firm but relaxed — like holding toothpaste without squeezing any out!"},
+  {q:"Which knuckles should line up when you grip the bat?", opts:["Your knocking knuckles (door-knocking knuckles)","Your big knuckles","Your pinky knuckles","It doesn't matter"], correct:0, explain:"Line up your knocking knuckles — the ones you'd use to knock on a door!"},
+
+  // Strikes, balls, fouls
+  {q:"How many STRIKES until you're out?", opts:["3","2","4","5"], correct:0, explain:"3 strikes and you're out! One of the most famous rules in all of sports."},
+  {q:"How many BALLS until you walk to first base?", opts:["4","3","5","2"], correct:0, explain:"4 balls = a walk! Free trip to first base."},
+  {q:"What is the STRIKE ZONE?", opts:["An invisible box from your knees to your chest, over the plate","Anywhere the pitcher throws","Only the center of the plate","Behind the batter"], correct:0, explain:"The strike zone goes from knees to mid-chest, over the width of home plate."},
+  {q:"A foul ball counts as a strike. Can it be strike THREE?", opts:["NO (unless you bunt it foul)","YES always","It never counts as a strike","Only with 2 outs"], correct:0, explain:"A foul ball counts as a strike, but can't be strike 3 — UNLESS you bunt it foul!"},
+  {q:"What is a BUNT?", opts:["Holding the bat out and letting the ball hit it softly","Swinging as hard as you can","Hitting the ball backwards","Throwing the bat at the ball"], correct:0, explain:"A bunt is when you hold the bat out and let the ball tap it for a short, soft hit."},
+  {q:"If a fielder catches a foul ball in the air, what happens?", opts:["The batter is OUT","Nothing, the at-bat continues","The batter gets first base","It's a ball"], correct:0, explain:"A caught foul ball = OUT! Just like a caught fly ball in fair territory."},
+
+  // Swing & pro tips
+  {q:"Where does your hitting POWER come from?", opts:["Your legs and hips","Just your arms","Your shoulders","Your wrists"], correct:0, explain:"Power comes from your legs and hips rotating — not just your arms!"},
+  {q:"What is the #1 RULE of hitting?", opts:["Keep your eyes on the ball","Swing at everything","Close your eyes and hope","Grip harder"], correct:0, explain:"EYES ON THE BALL — from the pitcher's hand all the way to your bat!"},
+  {q:"What does 'stepping in the bucket' mean?", opts:["Stepping AWAY from the plate when you swing (bad!)","Stepping toward the pitcher (good!)","Stepping on home plate","Kicking the bucket"], correct:0, explain:"'Stepping in the bucket' means your front foot steps away from the plate — it's a common mistake! Step TOWARD the pitcher instead."},
+  {q:"A walk is as good as a ___.", opts:["Hit","Strikeout","Home Run","Foul Ball"], correct:0, explain:"A walk is as good as a hit — you're on base either way! Good eye!"},
+  {q:"When you swing, what body part should rotate FIRST?", opts:["Your hips","Your arms","Your head","Your shoulders"], correct:0, explain:"Hips rotate first, then your hands and bat follow. Hips = power!"},
+  {q:"What should your knees be doing in your batting stance?", opts:["Slightly bent","Locked straight","Touching each other","As bent as possible"], correct:0, explain:"Slightly bent knees keep you balanced and ready to explode into your swing!"},
+  {q:"What does the letter 'K' mean in baseball?", opts:["Strikeout","Walk","Home Run","Bunt"], correct:0, explain:"K = strikeout! A backwards K means the batter struck out looking (didn't swing)."},
+];
+
+let selectedQuestions=[], userAnswers=[];
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function startQuiz(){
+  // Pick 5 random ensuring topic mix: 1 box, 1 bat/grip, 2 strikes/terms, 1 swing/tips
+  const box=questionBank.filter((_,i)=>i<4);
+  const bat=questionBank.filter((_,i)=>i>=4&&i<7);
+  const terms=questionBank.filter((_,i)=>i>=7&&i<14);
+  const tips=questionBank.filter((_,i)=>i>=14);
+
+  let picked=[
+    ...shuffle([...box]).slice(0,1),
+    ...shuffle([...bat]).slice(0,1),
+    ...shuffle([...terms]).slice(0,2),
+    ...shuffle([...tips]).slice(0,1)
+  ];
+  selectedQuestions=shuffle(picked);
+  userAnswers=new Array(5).fill(-1);
+
+  const container=document.getElementById('quizContainer');
+  container.innerHTML='';
+
+  selectedQuestions.forEach((q,i)=>{
+    const optIdxs=[0,1,2,3];
+    shuffle(optIdxs);
+    const correctShuffled=optIdxs.indexOf(q.correct);
+
+    const div=document.createElement('div');
+    div.className='quiz-question';
+    div.id='qq-'+i;
+    div.dataset.correct=correctShuffled;
+    div.dataset.explain=q.explain;
+
+    const labels=['A','B','C','D'];
+    let optsHtml='';
+    optIdxs.forEach((origIdx,j)=>{
+      optsHtml+=`<button class="quiz-opt" data-qi="${i}" data-oi="${j}" onclick="selectAnswer(${i},${j})">${labels[j]}) ${q.opts[origIdx]}</button>`;
+    });
+
+    div.innerHTML=`
+      <div class="quiz-num">QUESTION ${i+1} OF 5</div>
+      <div class="quiz-text">${q.q}</div>
+      <div class="quiz-options">${optsHtml}</div>
+      <div class="quiz-explain" id="explain-${i}"></div>
+    `;
+    container.appendChild(div);
+  });
+
+  document.getElementById('quizSubmitArea').style.display='flex';
+  document.getElementById('quizResults').style.display='none';
+  document.getElementById('quizRetryArea').style.display='none';
+}
+
+function selectAnswer(qi,oi){
+  const qq=document.getElementById('qq-'+qi);
+  if(qq.classList.contains('graded')) return;
+  userAnswers[qi]=oi;
+  qq.querySelectorAll('.quiz-opt').forEach(btn=>{
+    btn.classList.remove('selected');
+    if(parseInt(btn.dataset.oi)===oi) btn.classList.add('selected');
+  });
+  if(userAnswers.every(a=>a>=0)){
+    document.getElementById('quizSubmitArea').querySelector('.nav-btn').style.animation='blink .8s infinite';
+  }
+}
+
+function gradeQuiz(){
+  let score=0;
+  const total=5;
+  selectedQuestions.forEach((_,i)=>{
+    const qq=document.getElementById('qq-'+i);
+    const correct=parseInt(qq.dataset.correct);
+    qq.classList.add('graded');
+    qq.querySelectorAll('.quiz-opt').forEach(btn=>{
+      btn.classList.add('locked');
+      const oi=parseInt(btn.dataset.oi);
+      if(oi===correct) btn.classList.add('correct');
+      if(oi===userAnswers[i]&&oi!==correct) btn.classList.add('wrong');
+    });
+    const ex=document.getElementById('explain-'+i);
+    ex.textContent=qq.dataset.explain;
+    ex.classList.add('show');
+    if(userAnswers[i]===correct) score++;
+  });
+
+  const pct=Math.round((score/total)*100);
+  let grade,gradeClass,msg;
+  if(pct>=90){grade='A';gradeClass='grade-a';msg="🏆 ALL-STAR BATTER! You really know your stuff up at the plate! 🏆";}
+  else if(pct>=80){grade='B';gradeClass='grade-b';msg="⭐ GREAT SWING! Solid knowledge — keep practicing!";}
+  else if(pct>=70){grade='C';gradeClass='grade-c';msg="👍 NICE EFFORT! Review the levels and step back up to the plate!";}
+  else if(pct>=60){grade='D';gradeClass='grade-d';msg="📚 KEEP STUDYING! Go through the levels again — you'll get it!";}
+  else{grade='F';gradeClass='grade-f';msg="💪 DON'T GIVE UP! Every big leaguer started somewhere. Review and try again!";}
+  if(pct===100){msg="🎆 PERFECT GAME!! 5 for 5!! You're a hitting GENIUS!! 🎆";launchConfetti();}
+
+  const resultsDiv=document.getElementById('quizResults');
+  resultsDiv.style.display='block';
+  resultsDiv.innerHTML=`
+    <div class="results-card">
+      <div style="font-size:12px;color:var(--neon-pink);">YOUR SCORE</div>
+      <div class="results-grade ${gradeClass}">${grade}</div>
+      <div class="results-pct">${score}/${total} — ${pct}%</div>
+      <div class="results-msg">${msg}</div>
+    </div>
+  `;
+
+  document.getElementById('quizSubmitArea').style.display='none';
+  document.getElementById('quizRetryArea').style.display='flex';
+  resultsDiv.scrollIntoView({behavior:'smooth'});
+}
+
+// ============ DOWNLOAD SCORE CARD ============
+function downloadScoreCard(){
+  const name=document.getElementById('playerName').value.trim()||'PLAYER';
+  const canvas=document.createElement('canvas');
+  canvas.width=600; canvas.height=440;
+  const ctx=canvas.getContext('2d');
+
+  ctx.fillStyle='#0a0a2e'; ctx.fillRect(0,0,600,440);
+  ctx.strokeStyle='#ff9f1c'; ctx.lineWidth=4; ctx.strokeRect(10,10,580,420);
+  ctx.strokeStyle='#ff6ec7'; ctx.lineWidth=2; ctx.strokeRect(18,18,564,404);
+  ctx.fillStyle='rgba(0,0,0,0.1)';
+  for(let y=0;y<440;y+=3) ctx.fillRect(0,y,600,1);
+
+  ctx.font='18px "Press Start 2P",monospace';
+  ctx.fillStyle='#ff9f1c'; ctx.textAlign='center';
+  ctx.shadowColor='#ff3131'; ctx.shadowBlur=15;
+  ctx.fillText('⚾ BATTING BASICS ⚾',300,60);
+  ctx.font='12px "Press Start 2P",monospace';
+  ctx.fillStyle='#00f0ff'; ctx.shadowColor='#00f0ff'; ctx.shadowBlur=10;
+  ctx.fillText('OFFICIAL SCORE CARD',300,85);
+
+  ctx.shadowBlur=0; ctx.strokeStyle='#333'; ctx.lineWidth=1;
+  ctx.setLineDash([4,4]); ctx.beginPath(); ctx.moveTo(40,100); ctx.lineTo(560,100); ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.font='11px "Press Start 2P",monospace';
+  ctx.fillStyle='#ff6ec7'; ctx.shadowColor='#ff6ec7'; ctx.shadowBlur=8;
+  ctx.fillText('PLAYER',300,130);
+  ctx.font='16px "Press Start 2P",monospace';
+  ctx.fillStyle='#fff'; ctx.shadowBlur=0;
+  ctx.fillText(name.toUpperCase(),300,158);
+
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  ctx.font='8px "Press Start 2P",monospace';
+  ctx.fillStyle='#666'; ctx.fillText(dateStr,300,180);
+
+  let score=0;
+  selectedQuestions.forEach((_,i)=>{
+    const qq=document.getElementById('qq-'+i);
+    if(userAnswers[i]===parseInt(qq.dataset.correct)) score++;
+  });
+  const total=5;
+  const pct=Math.round((score/total)*100);
+  let grade,gradeColor;
+  if(pct>=90){grade='A';gradeColor='#39ff14';}
+  else if(pct>=80){grade='B';gradeColor='#00f0ff';}
+  else if(pct>=70){grade='C';gradeColor='#fff700';}
+  else if(pct>=60){grade='D';gradeColor='#ff9f1c';}
+  else{grade='F';gradeColor='#ff3131';}
+
+  ctx.font='72px "Press Start 2P",monospace';
+  ctx.fillStyle=gradeColor; ctx.shadowColor=gradeColor; ctx.shadowBlur=25;
+  ctx.fillText(grade,300,275);
+
+  ctx.shadowBlur=0; ctx.font='14px "Press Start 2P",monospace';
+  ctx.fillStyle='#00f0ff';
+  ctx.fillText(score+' / '+total+'  —  '+pct+'%',300,310);
+
+  ctx.font='9px "Press Start 2P",monospace';
+  let breakdown='';
+  selectedQuestions.forEach((_,i)=>{
+    const qq=document.getElementById('qq-'+i);
+    breakdown+=userAnswers[i]===parseInt(qq.dataset.correct)?'✅':'❌';
+    if(i<total-1) breakdown+=' ';
+  });
+  ctx.fillStyle='#aaa'; ctx.fillText(breakdown,300,340);
+  ctx.font='7px "Press Start 2P",monospace'; ctx.fillStyle='#444';
+  ctx.fillText('Q1    Q2    Q3    Q4    Q5',300,358);
+
+  ctx.font='7px "Press Start 2P",monospace'; ctx.fillStyle='#333';
+  ctx.fillText("BATTING BASICS ACADEMY — COACH'S TRAINING PROGRAM",300,400);
+  const timeStr=now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+  ctx.fillText('Completed: '+dateStr+' at '+timeStr,300,415);
+
+  const link=document.createElement('a');
+  link.download='Batting-Score-'+name.replace(/\s+/g,'-')+'.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+}
+
+function launchConfetti(){
+  const container=document.createElement('div');
+  container.className='confetti-container';
+  document.body.appendChild(container);
+  const colors=['var(--neon-green)','var(--neon-blue)','var(--neon-pink)','var(--neon-yellow)','var(--neon-orange)','#fff'];
+  for(let i=0;i<60;i++){
+    const piece=document.createElement('div');
+    piece.className='confetti-piece';
+    piece.style.left=Math.random()*100+'%';
+    piece.style.background=colors[Math.floor(Math.random()*colors.length)];
+    piece.style.animationDelay=Math.random()*2+'s';
+    piece.style.animationDuration=(2+Math.random()*2)+'s';
+    container.appendChild(piece);
+  }
+  setTimeout(()=>container.remove(),5000);
+}
+</script>
+</body>
+</html>
